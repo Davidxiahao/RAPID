@@ -5,6 +5,7 @@ import soot.jimple.infoflow.android.SetupApplication;
 import soot.jimple.infoflow.config.IInfoflowConfig;
 import soot.jimple.infoflow.solver.cfg.IInfoflowCFG;
 import soot.jimple.infoflow.solver.cfg.InfoflowCFG;
+import soot.toolkits.graph.BriefBlockGraph;
 
 import java.util.HashSet;
 
@@ -19,6 +20,14 @@ public class ApkAnalyzer {
         apkMetaInfo = new ApkMetaInfo(apkFile);
     }
 
+    public long doAnalysis(){
+        long start = System.currentTimeMillis();
+
+        runWithFlowDroid(this.androidPath, this.apkFile);
+
+        return (System.currentTimeMillis()-start)/1000;
+    }
+
     public void runWithFlowDroid(String androidPath, String apkFile){
         SetupApplication application = new SetupApplication(androidPath, apkFile);
         IInfoflowConfig iInfoflowConfig = new ConfigForAndroidMultipleDex();
@@ -30,6 +39,11 @@ public class ApkAnalyzer {
     }
 
     public void traverse(IInfoflowCFG cfg, SootMethod method, HashSet<String> visited){
+        if (method.hasActiveBody() && !visited.contains(method.getSignature())){
+            visited.add(method.getSignature());
 
+            BriefBlockGraph briefBlockGraph = new BriefBlockGraph(method.getActiveBody());
+
+        }
     }
 }
