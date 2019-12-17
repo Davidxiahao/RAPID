@@ -15,6 +15,7 @@ public class DataFlowAnalyze {
     public IInfoflowCFG cfg;
     public BriefBlockGraph briefBlockGraph;
     public SootMethod method;
+    public Map<Unit, FlowUnit> unitMap;
     public Set<Block> inputChangedBlock;
 
     public DataFlowAnalyze(ApkMetaInfo apkMetaInfo, IInfoflowCFG cfg, SootMethod method,
@@ -24,6 +25,14 @@ public class DataFlowAnalyze {
         this.method = method;
         this.briefBlockGraph = briefBlockGraph;
         inputChangedBlock = new HashSet<>();
+
+    }
+
+    private void doDataFlowAnalyze(){
+
+    }
+
+    private void unitInitialize(){
 
     }
 }
