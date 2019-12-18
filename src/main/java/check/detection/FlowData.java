@@ -37,7 +37,30 @@ public class FlowData {
         for (Map.Entry<Value, Set<String>> entry : flowData.conditionTag.entrySet()){
             if (!conditionTag.containsKey(entry.getKey())){
                 conditionTag.put(entry.getKey(), new HashSet<>(entry.getValue()));
+            }else{
+                conditionTag.get(entry.getKey()).addAll(entry.getValue());
             }
         }
+        for (Map.Entry<String, Set<String>> entry : flowData.taintTag.entrySet()){
+            if (!taintTag.containsKey(entry.getKey())){
+                taintTag.put(entry.getKey(), new HashSet<>(entry.getValue()));
+            }else {
+                taintTag.get(entry.getKey()).addAll(entry.getValue());
+            }
+        }
+        taintSet.addAll(flowData.taintSet);
+        localVar.putAll(flowData.localVar);
+    }
+
+    public boolean equals(FlowData flowData){
+        for (Map.Entry<FlowUnit, Set<Boolean>> entry : flowData.conditionMap.entrySet()){
+            if (!conditionMap.containsKey(entry.getKey()) || !conditionMap.get(entry.getKey()).equals(entry.getValue())){
+                return false;
+            }
+        }
+        if (!flowData.taintSet.equals(taintSet)){
+            return false;
+        }
+        return true;
     }
 }

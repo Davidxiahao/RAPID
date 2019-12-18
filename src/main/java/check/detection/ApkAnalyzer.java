@@ -43,6 +43,8 @@ public class ApkAnalyzer {
             visited.add(method.getSignature());
 
             BriefBlockGraph briefBlockGraph = new BriefBlockGraph(method.getActiveBody());
+            DataFlowAnalyze dataFlowAnalyze = new DataFlowAnalyze(apkMetaInfo, cfg, method, briefBlockGraph);
+
 
         }
     }
