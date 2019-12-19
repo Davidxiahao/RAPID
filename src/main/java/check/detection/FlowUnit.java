@@ -1,6 +1,7 @@
 package check.detection;
 
 import soot.Unit;
+import soot.Value;
 import soot.ValueBox;
 import soot.jimple.internal.JimpleLocal;
 
@@ -95,5 +96,35 @@ public class FlowUnit {
             }
         }
         return false;
+    }
+
+    public String printLocalsInUnit(Value value){
+        String result = value.toString();
+        for (ValueBox valueBox : value.getUseBoxes()){
+            if (valueBox.getValue() instanceof JimpleLocal){
+                Set<FlowUnit> visited = new HashSet<>();
+                result = result.replace(valueBox.getValue().toString(), printLocalVar(valueBox.getValue(), visited));
+            }
+        }
+        return result;
+    }
+
+    public String printLocalVar(Value value, Set<FlowUnit> visited){
+        String result = "NULL";
+
+        if (visited.contains(this)) return result;
+        visited.add(this);
+
+        if (outFlow.localVar.containsKey(value)){
+            result = outFlow.localVar.get(value).myUnit.toString().split("=")[1];
+            for (ValueBox valueBox : outFlow.localVar.get(value).myUnit.getUseBoxes()){
+                if (valueBox.getValue() instanceof JimpleLocal){
+                    result = result.replace(valueBox.getValue().toString(),
+                            inFlow.localVar.get(valueBox.getValue()).printLocalVar(valueBox.getValue(), visited));
+                }
+            }
+        }
+
+        return result;
     }
 }
