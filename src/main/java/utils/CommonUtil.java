@@ -3,7 +3,10 @@ package utils;
 import soot.Value;
 import soot.jimple.InvokeExpr;
 
+import java.util.Map;
+
 public class CommonUtil {
+    public static Map<String, LifeCycle> methodLifeCycle = ParseSourceCode.getMethodLifeCycle();
     public static String getJNIName(Value value){
         InvokeExpr invokeExpr = (InvokeExpr) value;
         String invokeSignature = invokeExpr.getMethod().getSignature();

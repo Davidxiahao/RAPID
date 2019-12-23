@@ -11,6 +11,7 @@ import soot.toolkits.graph.Block;
 import soot.toolkits.graph.BriefBlockGraph;
 import utils.CheckedAPIInvoke;
 import utils.CommonUtil;
+import utils.ParseExtendsClass;
 
 import java.util.*;
 
@@ -187,11 +188,43 @@ public class DataFlowAnalyze {
             for (ValueBox valueBox : unit.getUseBoxes()){
                 if (valueBox.getValue() instanceof InvokeExpr){
                     String methodJNIName = CommonUtil.getJNIName(valueBox.getValue());
-                    
+                    if (CommonUtil.methodLifeCycle.containsKey(methodJNIName)
+                    && bestMatch(unitAvailable, CommonUtil.methodLifeCycle.get(methodJNIName).recommendVersion)){
+                        List<Unit> elseBlockUnits;
+                    }
                 }
             }
         }
         return null;
+    }
+
+    private List<Unit> getElseBlockUnits(Unit unit){
+        List<Unit> result = new ArrayList<>();
+        for (Unit iunit : ifElseUnits){
+            boolean re = false;
+            int count = 0;
+            for (Map.Entry<FlowUnit, Set<Boolean>> entry : unitMap.get(unit).inFlow.conditionMap.entrySet()){
+                if (re) continue;
+                if (!unitMap.get(iunit).inFlow.conditionMap.containsKey(entry.getKey())
+                || entry.getValue().size() != unitMap.get(iunit).inFlow.conditionMap.get(entry.getKey()).size()){
+                    re = true;
+                }else if ((entry.getValue().size() == 1) &&
+                ((entry.getValue().contains(false) && !unitMap.get(iunit).inFlow.conditionMap.get(entry.getKey()).contains(false))
+                || (entry.getValue().contains(true) && !unitMap.get(iunit).inFlow.conditionMap.get(entry.getKey()).contains(true)))){
+                    count++;
+                }
+            }
+        }
+        return null;
+    }
+
+    private boolean bestMatch(boolean[] unitAvailable, boolean[] recommendVersion){
+        for (int i = 1; i <= ParseExtendsClass.maxVersion; i++){
+            if (unitAvailable[i]!=recommendVersion[i]){
+                return false;
+            }
+        }
+        return true;
     }
 
     public boolean[] getUnitSDKVersion(Unit unit){

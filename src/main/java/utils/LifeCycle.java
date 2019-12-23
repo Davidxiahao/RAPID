@@ -14,4 +14,15 @@ public class LifeCycle {
             recommendVersion[i] = false;
         }
     }
+
+    public void interSection(LifeCycle bLifeCycle){
+        for (int i = 1; i <= maxVersion; i++){
+            if (!bLifeCycle.availableVersion[i]){
+                availableVersion[i] = false;
+            }
+            if (!bLifeCycle.recommendVersion[i]){
+                recommendVersion[i] = false;
+            }
+        }
+    }
 }
