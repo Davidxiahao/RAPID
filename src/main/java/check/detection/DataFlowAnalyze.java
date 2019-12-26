@@ -190,12 +190,43 @@ public class DataFlowAnalyze {
                     String methodJNIName = CommonUtil.getJNIName(valueBox.getValue());
                     if (CommonUtil.methodLifeCycle.containsKey(methodJNIName)
                     && bestMatch(unitAvailable, CommonUtil.methodLifeCycle.get(methodJNIName).recommendVersion)){
-                        List<Unit> elseBlockUnits;
+                        List<Unit> elseBlockUnits = getElseBlockUnits(unit);
+                        List<Unit> sameBlockUnits = getSameBlockUnits(unit);
+                        boolean haveSameMethod = false;
+                        for (Unit iUnit : elseBlockUnits){
+                            for (ValueBox iValueBox : iUnit.getUseBoxes()){
+                                if (iValueBox.getValue() instanceof InvokeExpr){
+                                    String methodJNINameInElseBlock = CommonUtil.getJNIName(iValueBox.getValue());
+                                    if (methodJNINameInElseBlock.equals(methodJNIName)) haveSameMethod = true;
+                                }
+                            }
+                        }
+                        if (haveSameMethod) continue;
+                        result.add(new CheckedAPIInvoke(methodJNIName,
+                                apkMetaInfo,
+                                method,
+                                unit,
+                                getIfCheckUnit(unit),
+                                unitMap.get(unit).conditions,
+                                sameBlockUnits,
+                                elseBlockUnits,
+                                briefBlockGraph));
                     }
                 }
             }
         }
-        return null;
+        return result;
+    }
+
+    private Set<Unit> getIfCheckUnit(Unit unit){
+        Set<Unit> result = new HashSet<>();
+        FlowUnit flowUnit = unitMap.get(unit);
+        for (Map.Entry<FlowUnit, Set<Boolean>> entry : flowUnit.inFlow.conditionMap.entrySet()){
+            if (entry.getValue().size() == 1){
+                result.add(entry.getKey().myUnit);
+            }
+        }
+        return result;
     }
 
     private List<Unit> getElseBlockUnits(Unit unit){
@@ -214,8 +245,36 @@ public class DataFlowAnalyze {
                     count++;
                 }
             }
+            if (!re && count == 1){
+                result.add(iunit);
+            }
         }
-        return null;
+        return result;
+    }
+
+    private List<Unit> getSameBlockUnits(Unit unit){
+        List<Unit> result = new ArrayList<>();
+        for (Unit iunit : ifElseUnits){
+            boolean re = false;
+            int count = 0;
+            for (Map.Entry<FlowUnit, Set<Boolean>> entry : unitMap.get(unit).inFlow.conditionMap.entrySet()){
+                if (re) continue;
+                if (!unitMap.get(iunit).inFlow.conditionMap.containsKey(entry.getKey())
+                || entry.getValue().size() != unitMap.get(iunit).inFlow.conditionMap.get(entry.getKey()).size()){
+                    re = true;
+                }else if ((entry.getValue().size() == 1)
+                && ((entry.getValue().contains(false)
+                        && !unitMap.get(iunit).inFlow.conditionMap.get(entry.getKey()).contains(false))
+                    || (entry.getValue().contains(true)
+                        && !unitMap.get(iunit).inFlow.conditionMap.get(entry.getKey()).contains(true)))){
+                    count++;
+                }
+            }
+            if (!re && count == 0){
+                result.add(iunit);
+            }
+        }
+        return result;
     }
 
     private boolean bestMatch(boolean[] unitAvailable, boolean[] recommendVersion){
