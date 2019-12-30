@@ -9,10 +9,7 @@ import soot.jimple.infoflow.config.IInfoflowConfig;
 import soot.jimple.infoflow.solver.cfg.IInfoflowCFG;
 import soot.jimple.infoflow.solver.cfg.InfoflowCFG;
 import soot.toolkits.graph.BriefBlockGraph;
-import utils.CheckedAPIInvoke;
-import utils.CommonUtil;
-import utils.LifeCycle;
-import utils.ParseExtendsClass;
+import utils.*;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -23,6 +20,7 @@ public class ApkAnalyzer {
     private String androidPath;
     public ApkMetaInfo apkMetaInfo;
     public List<CheckedAPIInvoke> checkedAPIInvokeList = new ArrayList<>();
+    public List<UnCheckedAPIInvoke> unCheckedAPIInvokeList = new ArrayList<>();
 
     public ApkAnalyzer(String androidPath, String apkFile){
         this.androidPath = androidPath;
@@ -65,9 +63,19 @@ public class ApkAnalyzer {
                             boolean[] available = dataFlowAnalyze.getUnitSDKVersion(unit);
                             String notAvailableVersion = check(CommonUtil.methodLifeCycle.get(methodJNIName),
                                     available);
-                            
+                            if (!notAvailableVersion.equals("")){
+                                unCheckedAPIInvokeList.add(new UnCheckedAPIInvoke(apkMetaInfo,
+                                        method,
+                                        unit));
+                            }
                         }
                     }
+                }
+            }
+
+            for (Unit unit : method.getActiveBody().getUnits()){
+                for (SootMethod calleeMethod : cfg.getCalleesOfCallAt(unit)){
+                    traverse(cfg, calleeMethod, visited);
                 }
             }
         }
