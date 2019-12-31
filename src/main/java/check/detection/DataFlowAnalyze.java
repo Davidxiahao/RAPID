@@ -32,7 +32,7 @@ public class DataFlowAnalyze {
         this.method = method;
         this.briefBlockGraph = briefBlockGraph;
         inputChangedBlock = new HashSet<>();
-
+        doDataFlowAnalyze();
     }
 
     private void doDataFlowAnalyze(){
