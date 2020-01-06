@@ -215,6 +215,29 @@ public class DataFlowAnalyze {
                 }
             }
         }
+        for (Unit unit : ifUnits){
+            if (ifElseUnits.contains(unit)) continue;
+            boolean[] unitAvailable = getUnitSDKVersion(unit);
+            for (ValueBox valueBox : unit.getUseBoxes()){
+                if (valueBox.getValue() instanceof InvokeExpr){
+                    String methodJNIName = CommonUtil.getJNIName(valueBox.getValue());
+                    if (CommonUtil.methodLifeCycle.containsKey(methodJNIName)
+                    && bestMatch(unitAvailable, CommonUtil.methodLifeCycle.get(methodJNIName).recommendVersion)){
+                        List<Unit> sameBlockUnits = getBlockUnits(unit);
+                        List<Unit> elseBlockUnits = new ArrayList<>();
+                        result.add(new CheckedAPIInvoke(methodJNIName,
+                                apkMetaInfo,
+                                method,
+                                unit,
+                                getIfCheckUnit(unit),
+                                unitMap.get(unit).conditions,
+                                sameBlockUnits,
+                                elseBlockUnits,
+                                briefBlockGraph));
+                    }
+                }
+            }
+        }
         return result;
     }
 
@@ -272,6 +295,31 @@ public class DataFlowAnalyze {
             }
             if (!re && count == 0){
                 result.add(iunit);
+            }
+        }
+        return result;
+    }
+
+    private List<Unit> getBlockUnits(Unit unit){
+        List<Unit> result = new ArrayList<>();
+        for (Unit iUnit : ifUnits){
+            boolean re = false;
+            int count = 0;
+            for (Map.Entry<FlowUnit, Set<Boolean>> entry : unitMap.get(unit).inFlow.conditionMap.entrySet()){
+                if (re) continue;
+                if (!unitMap.get(iUnit).inFlow.conditionMap.containsKey(entry.getKey())
+                || entry.getValue().size() != unitMap.get(iUnit).inFlow.conditionMap.get(entry.getKey()).size()){
+                    re = true;
+                }else if ((entry.getValue().size() == 1)
+                && ((entry.getValue().contains(false)
+                        && !unitMap.get(iUnit).inFlow.conditionMap.get(entry.getKey()).contains(false))
+                || (entry.getValue().contains(true)
+                        && !unitMap.get(iUnit).inFlow.conditionMap.get(entry.getKey()).contains(true)))){
+                    count++;
+                }
+            }
+            if (!re && count == 0){
+                result.add(iUnit);
             }
         }
         return result;

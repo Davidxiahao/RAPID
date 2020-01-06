@@ -1,6 +1,7 @@
 import check.detection.ApkAnalyzer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import utils.CheckedAPIInvoke;
 
 public class Main {
     static private Logger logger = LogManager.getLogger();
@@ -17,11 +18,18 @@ public class Main {
 
     public static void predicChecksInApk(String androidJars, String apkPath){
         ApkAnalyzer apkAnalyzer = new ApkAnalyzer(androidJars, apkPath);
+        long timeUsed = 0;
         try {
-            long timeUsed = apkAnalyzer.doAnalysis();
+            timeUsed = apkAnalyzer.doAnalysis();
             logger.info("Time used: " + timeUsed);
         }catch (Exception e){
             e.printStackTrace();
+        }
+        if (timeUsed != 0){
+            for (CheckedAPIInvoke invoke : apkAnalyzer.checkedAPIInvokeList){
+                System.out.println("targetMethod: " + invoke.targetMethod.getSignature());
+                System.out.println("methodJNIName: " + invoke.methodJNIName);
+            }
         }
     }
 }

@@ -1,5 +1,6 @@
 package utils;
 
+import soot.SootMethod;
 import soot.Value;
 import soot.jimple.InvokeExpr;
 
@@ -13,5 +14,11 @@ public class CommonUtil {
         String findMethod = invokeSignature.split(": ")[0].replaceAll("<", "") + ":"
                 + invokeSignature.split(" ")[2].split("\\(")[0];
         return findMethod + SootMethodForJavaH.getDesc(invokeExpr.getMethod());
+    }
+    public static String getJNIName(SootMethod method){
+        String invokeSignature = method.getSignature();
+        String findMethod = invokeSignature.split(": ")[0].replaceAll("<", "") + ":"
+                + invokeSignature.split(" ")[2].split("\\(")[0];
+        return findMethod + SootMethodForJavaH.getDesc(method);
     }
 }

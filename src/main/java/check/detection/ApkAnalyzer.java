@@ -1,5 +1,6 @@
 package check.detection;
 
+import soot.Scene;
 import soot.SootMethod;
 import soot.Unit;
 import soot.ValueBox;
@@ -47,6 +48,10 @@ public class ApkAnalyzer {
     }
 
     public void traverse(IInfoflowCFG cfg, SootMethod method, HashSet<String> visited){
+        if (!Scene.v().getApplicationClasses().contains(method.getDeclaringClass())) return;
+        //todo Exclude third-party packages for Android itself
+        String methodName = CommonUtil.getJNIName(method);
+        if (CommonUtil.methodLifeCycle.containsKey(methodName)) return;
         if (method.hasActiveBody() && !visited.contains(method.getSignature())){
             visited.add(method.getSignature());
 
