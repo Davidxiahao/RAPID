@@ -19,7 +19,7 @@ public class ParseSourceCode {
         Document document = null;
         try {
             builder = factory.newDocumentBuilder();
-            document = builder.parse("src/main/resources/api-versions.xml");
+            document = builder.parse("resources/api-versions.xml");
         }catch (Exception e){
             e.printStackTrace();
         }

@@ -1,7 +1,9 @@
 package utils;
 
 import soot.SootMethod;
+import soot.Unit;
 import soot.Value;
+import soot.ValueBox;
 import soot.jimple.InvokeExpr;
 
 import java.util.Map;
@@ -20,5 +22,22 @@ public class CommonUtil {
         String findMethod = invokeSignature.split(": ")[0].replaceAll("<", "") + ":"
                 + invokeSignature.split(" ")[2].split("\\(")[0];
         return findMethod + SootMethodForJavaH.getDesc(method);
+    }
+    public static String getInvokeAPIName(Unit invokeUnit){
+        for (ValueBox valueBox : invokeUnit.getUseBoxes()){
+            if (valueBox.getValue() instanceof InvokeExpr){
+                return CommonUtil.getJNIName(valueBox.getValue());
+            }
+        }
+        return null;
+    }
+    public static int getUnitOffsetInMethod(SootMethod method, Unit unit){
+        int offset = 0;
+        for (Unit u : method.getActiveBody().getUnits()){
+            offset++;
+            if (u.equals(unit))
+                return offset;
+        }
+        return -1;
     }
 }

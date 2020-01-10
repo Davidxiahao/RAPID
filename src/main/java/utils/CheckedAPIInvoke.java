@@ -79,4 +79,8 @@ public class CheckedAPIInvoke {
         }
         return false;
     }
+
+    public boolean isSingleIf(){
+        return theOtherUnitList.size() == 0;
+    }
 }
