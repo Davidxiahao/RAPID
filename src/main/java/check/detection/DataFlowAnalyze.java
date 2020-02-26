@@ -1,9 +1,6 @@
 package check.detection;
 
-import soot.SootMethod;
-import soot.Unit;
-import soot.Value;
-import soot.ValueBox;
+import soot.*;
 import soot.jimple.InvokeExpr;
 import soot.jimple.infoflow.solver.cfg.IInfoflowCFG;
 import soot.jimple.internal.*;
@@ -24,6 +21,7 @@ public class DataFlowAnalyze {
     public Set<Block> inputChangedBlock;
     public Set<Unit> ifElseUnits = new HashSet<>();
     public Set<Unit> ifUnits = new HashSet<>();
+    public Map<Unit, List<Unit>> inlineMap = new HashMap<>();
 
     public DataFlowAnalyze(ApkMetaInfo apkMetaInfo, IInfoflowCFG cfg, SootMethod method,
                            BriefBlockGraph briefBlockGraph){
@@ -45,10 +43,20 @@ public class DataFlowAnalyze {
                     merge(block);
                     FlowData up = unitMap.get(block.getHead()).inFlow;
                     for (Unit unit : block){
-                        FlowUnit flowUnit = unitMap.get(unit);
-                        flowUnit.inFlow.addAll(up);
-                        flowUnit.flowThrough();
-                        up = flowUnit.outFlow;
+                        //inline
+                        if (inlineMap.containsKey(unit)){
+                            for (Unit inlineUnit : inlineMap.get(unit)){
+                                FlowUnit flowUnit = unitMap.get(inlineUnit);
+                                flowUnit.inFlow.addAll(up);
+                                flowUnit.flowThrough();
+                                up = flowUnit.outFlow;
+                            }
+                        }else {
+                            FlowUnit flowUnit = unitMap.get(unit);
+                            flowUnit.inFlow.addAll(up);
+                            flowUnit.flowThrough();
+                            up = flowUnit.outFlow;
+                        }
                     }
                     if (unitMap.get(block.getTail()).outFlowChanged){
                         newInputChangedBlock.addAll(block.getSuccs());
@@ -64,6 +72,16 @@ public class DataFlowAnalyze {
         for (Unit unit : method.getActiveBody().getUnits()){
             FlowUnit flowUnit = new FlowUnit(unit, new FlowData(), new FlowData());
             unitMap.put(unit, flowUnit);
+            //inline
+            for (SootMethod sootMethod : cfg.getCalleesOfCallAt(unit)){
+                if (Scene.v().getApplicationClasses().contains(sootMethod.getDeclaringClass())){
+                    for (Unit inlineUnit : sootMethod.getActiveBody().getUnits()){
+                        FlowUnit inlineFlowUnit = new FlowUnit(inlineUnit, new FlowData(), new FlowData());
+                        unitMap.put(inlineUnit, inlineFlowUnit);
+                    }
+                    inlineMap.put(unit, new ArrayList<>(sootMethod.getActiveBody().getUnits()));
+                }
+            }
         }
     }
 
@@ -91,7 +109,8 @@ public class DataFlowAnalyze {
 
     public void getIfElseSituation(){
         Map<FlowUnit, Set<Boolean>> conditionMap = new HashMap<>();
-        for (Unit unit : method.getActiveBody().getUnits()){
+        //for (Unit unit : method.getActiveBody().getUnits()){
+        for (Unit unit : unitMap.keySet()){
             if (unitMap.get(unit) != null && unitMap.get(unit).haveCondition()){
                 for (Map.Entry<FlowUnit, Set<Boolean>> entry : unitMap.get(unit).inFlow.conditionMap.entrySet()){
                     if (entry.getValue().size() == 1){
@@ -117,7 +136,8 @@ public class DataFlowAnalyze {
             }
         }
 
-        for (Unit unit : method.getActiveBody().getUnits()){
+        //for (Unit unit : method.getActiveBody().getUnits()){
+        for (Unit unit : unitMap.keySet()){
             for (FlowUnit check : ifElseCondition){
                 if (unitMap.containsKey(unit) && unitMap.get(unit).inFlow.conditionMap.containsKey(check)
                 && unitMap.get(unit).inFlow.conditionMap.get(check).size() == 1){
@@ -126,7 +146,8 @@ public class DataFlowAnalyze {
             }
         }
 
-        for (Unit unit : method.getActiveBody().getUnits()){
+        //for (Unit unit : method.getActiveBody().getUnits()){
+        for (Unit unit : unitMap.keySet()){
             for (FlowUnit check : ifCondition){
                 if (unitMap.containsKey(unit) && unitMap.get(unit).inFlow.conditionMap.containsKey(check)
                 && unitMap.get(unit).inFlow.conditionMap.get(check).size() == 1){
@@ -137,7 +158,8 @@ public class DataFlowAnalyze {
     }
 
     public void doUnitConditionAnalyze(){
-        for (Unit unit : method.getActiveBody().getUnits()){
+        //for (Unit unit : method.getActiveBody().getUnits()){
+        for (Unit unit : unitMap.keySet()){
             if (unitMap.get(unit) != null && unitMap.get(unit).haveCondition()){
                 String conditions = "";
                 for (Map.Entry<FlowUnit, Set<Boolean>> entry : unitMap.get(unit).inFlow.conditionMap.entrySet()){
