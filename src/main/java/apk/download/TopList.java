@@ -13,38 +13,38 @@ import java.util.Map;
 
 public class TopList {
     public static void main(String[] args) {
-        Map<String, AndroidRankModel> topMap = readAndroidRankCSV();
-        Map<String, AndroidZooModel> libMap = readAndroidZooCSV();
-        Map<String, String> downloaded = readApk100w();
-        List<String> nList = new ArrayList<>();
-        List<String> hList = new ArrayList<>();
-        List<String> wList = new ArrayList<>();
-        for (String packageName : topMap.keySet()){
-            AndroidZooModel libApk = libMap.getOrDefault(packageName, null);
-            if (libApk != null){
-                if (downloaded.containsKey(libApk.md5)){
-                    hList.add(packageName);
-                }else {
-                    wList.add(libApk.sha256);
-                }
-            }else {
-                nList.add(packageName);
-            }
-        }
-        StringBuilder builder = new StringBuilder();
-        builder.append("nList").append("\n");
-        for (String line : nList){
-            builder.append(line).append("\n");
-        }
-        builder.append("hList").append("\n");
-        for (String line : hList){
-            builder.append(line).append("\n");
-        }
-        builder.append("wList").append("\n");
-        for (String line : wList){
-            builder.append(line).append("\n");
-        }
-        CommonUtil.writeToFile("waitdownload", builder.toString());
+//        Map<String, AndroidRankModel> topMap = readAndroidRankCSV();
+//        Map<String, AndroidZooModel> libMap = readAndroidZooCSV();
+//        Map<String, String> downloaded = readApk100w();
+//        List<String> nList = new ArrayList<>();
+//        List<String> hList = new ArrayList<>();
+//        List<String> wList = new ArrayList<>();
+//        for (String packageName : topMap.keySet()){
+//            AndroidZooModel libApk = libMap.getOrDefault(packageName, null);
+//            if (libApk != null){
+//                if (downloaded.containsKey(libApk.md5)){
+//                    hList.add(packageName);
+//                }else {
+//                    wList.add(libApk.sha256);
+//                }
+//            }else {
+//                nList.add(packageName);
+//            }
+//        }
+//        StringBuilder builder = new StringBuilder();
+//        builder.append("nList").append("\n");
+//        for (String line : nList){
+//            builder.append(line).append("\n");
+//        }
+//        builder.append("hList").append("\n");
+//        for (String line : hList){
+//            builder.append(line).append("\n");
+//        }
+//        builder.append("wList").append("\n");
+//        for (String line : wList){
+//            builder.append(line).append("\n");
+//        }
+//        CommonUtil.writeToFile("waitdownload", builder.toString());
     }
 
     public static Map<String, AndroidRankModel> readAndroidRankCSV(){
@@ -67,8 +67,8 @@ public class TopList {
         return resultMap;
     }
 
-    public static Map<String, AndroidZooModel> readAndroidZooCSV(){
-        Map<String, AndroidZooModel> resultMap = new HashMap<>();
+    public static Map<String, List<AndroidZooModel>> readAndroidZooCSV(){
+        Map<String, List<AndroidZooModel>> resultMap = new HashMap<>();
         try {
             BufferedReader reader = new BufferedReader(new FileReader("latest.csv"));
             String line;
@@ -84,9 +84,11 @@ public class TopList {
                 if (info[6].equals("")) info[6] = "-1";
                 if (info[7].equals("")) info[7] = "-1";
                 if (info[9].equals("")) info[9] = "-1";
-                resultMap.put(packageName, new AndroidZooModel(info[0], info[1], info[2], info[3],
+                List<AndroidZooModel> list = resultMap.getOrDefault(packageName, new ArrayList<>());
+                list.add(new AndroidZooModel(info[0], info[1], info[2], info[3],
                         Long.parseLong(info[4]), packageName, Integer.parseInt(info[6]), Integer.parseInt(info[7]),
                         info[8], Long.parseLong(info[9]), info[10]));
+                resultMap.put(packageName, list);
             }
         }catch (FileNotFoundException e){
             System.out.println("没找到AndroidZoo的csv");
